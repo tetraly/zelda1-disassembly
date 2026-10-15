@@ -44,32 +44,30 @@ CODE_SITES = (
      "Anim_ItemFrameTiles[$25]: the boomerang's spark tile $3C -> boots tile $1C (bank 1)"),
     (0x071CE, "20", "1c",
      "Anim_WriteSpecificItemSprites: narrow tiles start at $1C instead of $20 (bank 1)"),
-    (0x06B8A, "01", "02",
-     "ItemSlotToPaletteOffsetsOrValues[$1E]: L2 boots icon in the red palette (bank 1)"),
     (0x1F4F5, "000102010001020103", "fdfefffefdfefffee4",
      "BoomerangFrameCycle: Goriya frames wrap back to the vanilla tiles; spark uses entry 9 ($3C) (bank 7 $F4E5)"),
 )
 
 # Sprite tiles $1C (top) and $1D (bottom) of CommonSpritePatterns (bank 2 $807F + $1C0):
 # blank and unused in PRG0 ($1E/$1F after them are the inventory cursor).
-# 0 = transparent, 1-3 = sprite colors 1-3. Body 3 (L1 brown / L2 white), cuff 2 (tan / orange),
-# laces 1 (L1 Link's tunic color / L2 red), after a bead design by the ZORA team.
+# 0 = transparent, 2/3 = sprite colors 2/3: outline 3, fill 2 (design A). L1 is drawn in
+# Link's palette (brown outline, tan fill), L2 in the blue palette (white outline, light blue).
 BOOT_TILE_OFFSET = HEADER_SIZE + 32895 + 0x1C * 16
 BOOT_ART = """
 ........
-.2222...
-.2223...
-.2333...
-.1333...
-.3133...
-.1333...
-.3133...
-.3333...
-.3333...
 .33333..
-.333313.
-.3333313
+.32223..
+.33333..
+.32223..
+.32223..
+.32223..
+.32223..
+.32223..
+.322233.
+.3222233
+.3222223
 .3333333
+........
 ........
 ........
 """.split()
@@ -88,7 +86,9 @@ TEST_PRICE = 1
 L1_SPEED_OFFSET = 0x14E64
 L2_SPEED_OFFSET = 0x14E7C
 # Effective speed is quantized by Link's 8-pixel movement grid (vanilla $60 = 1.33 px/frame).
-SPEED_NOTES = {0x80: "2.0 px/frame, 1.5x, smooth", 0xC0: "2.67 px/frame, 2x, smooth",
+SPEED_NOTES = {0x79: "1.78 px/frame, ~1.34x, nearly smooth (1-2 px steps)",
+               0xA5: "2.31 px/frame, ~1.73x, nearly smooth (1-3 px steps)",
+               0x80: "2.0 px/frame, 1.5x, smooth", 0xC0: "2.67 px/frame, 2x, smooth",
                0xF4: "3.25 px/frame, ~2.44x, uneven (1-4 px steps)",
                0xF8: "3.5 px/frame, ~2.63x, uneven (1-4 px steps)"}
 

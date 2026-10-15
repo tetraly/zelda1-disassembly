@@ -17,7 +17,9 @@ Options: `--l1-speed HEX` and `--l2-speed HEX` set the boots' QSpeed (defaults
 | QSpeed | Effective speed | vs vanilla | Motion |
 | --- | --- | --- | --- |
 | `60` (vanilla) | 1.33 px/frame | 1× | |
+| `79` | 1.78 px/frame | ~1.34× | nearly smooth (1–2 px steps) |
 | `80` | 2.0 px/frame | 1.5× | smooth (2 px every frame) |
+| `A5` | 2.31 px/frame | ~1.73× | nearly smooth (1–3 px steps) |
 | `C0` | 2.67 px/frame | 2× | smooth (3, 3, 2 px) |
 | `F4` | 3.25 px/frame | ~2.44× | uneven: steps of 1 to 4 px per frame |
 | `F8` | 3.5 px/frame | ~2.63× | uneven |
@@ -73,8 +75,7 @@ supported.
 | `0x07181` | 1 | Bank 1 `Anim_ItemFrameTiles[$25]`: the boomerang spark's `$3C` becomes the boots tile `$1C` |
 | `0x071CE` | 1 | Bank 1 `Anim_WriteSpecificItemSprites`: narrow (half-width) tiles start at `$1C` instead of `$20`. No item drew `$1C`-`$1F` before |
 | `0x1F4F5` | 9 | Bank 7 `BoomerangFrameCycle`: the flying boomerang's frames wrap from `$25` back to its vanilla entries `$22`-`$24`, and its spark uses entry 9 (also `$3C`) |
-| `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (after the team's bead design: body color 3, cuff 2, laces 1). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
-| `0x06B8A` | 1 | Bank 1 `ItemSlotToPaletteOffsetsOrValues[$1E]`: the L2 boots icon uses the red palette (was blue) |
+| `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (design A: outline color 3, fill color 2). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
 | `0x14E64`, `0x14E7C` | 1 each | L1 and L2 speed operands inside `BootsSpeed` (`--l1-speed`, `--l2-speed`) |
 | attract text | 26 | `MAGICAL BOOMERANG` and `BOOMERANG` become `MAGICAL BOOTS` and `BOOTS`, centered in the same length (found in DemoTextFields at patch time) |
 | shop | 4 | Two wares and two prices of the blue candle shop (found at patch time) |
@@ -94,9 +95,9 @@ player's boomerang used).
   `python3 test_boots_logic.py boots_poc.nes`.
 - `dump_sprite_tiles.py`: lists the blank tiles among the always-loaded
   sprites and draws all of them to a PNG.
-- `boot_preview.png`: the boot icon. Left: L1 in Link's palette (brown boot, tan
-  cuff, laces in the tunic color). Right: L2 in the red palette (white boot,
-  orange cuff, red laces). The palette colors are assumed, not read from the ROM.
+- `boot_preview.png`: the boot icon. Left: L1 in Link's palette (brown outline,
+  tan fill). Right: L2 in the blue palette (white outline, light-blue fill). The
+  palette colors are assumed, not read from the ROM.
 
 ## Not yet verified
 

@@ -122,6 +122,8 @@ def speed(cpu):
 def main():
     rom = open(sys.argv[1], "rb").read()
     fails = 0
+    l1, l2 = rom[0x14E64], rom[0x14E7C]       # the speeds chosen with --l1-speed / --l2-speed
+    print(f"L1 speed ${l1:02X}, L2 speed ${l2:02X}")
 
     def check(name, got, want):
         nonlocal fails
@@ -132,18 +134,18 @@ def main():
     check("no boots, B held", speed(setup(rom, slot=2, b=True)), 0x60)
     check("no B items at all (slot 0 selected), B held", speed(setup(rom, slot=0, b=True)), 0x60)
     check("L1, B held, stairs", speed(setup(rom, l1=1, b=True, stairs=True)), 0x30)
-    check("L2, B held", speed(setup(rom, l1=1, l2=1, b=True)), 0xC0)
-    check("L2 only, B held", speed(setup(rom, l2=1, b=True)), 0xC0)
-    check("L2, B held, dungeon", speed(setup(rom, l1=1, l2=1, b=True, level=3)), 0xC0)
+    check("L2, B held", speed(setup(rom, l1=1, l2=1, b=True)), l2)
+    check("L2 only, B held", speed(setup(rom, l2=1, b=True)), l2)
+    check("L2, B held, dungeon", speed(setup(rom, l1=1, l2=1, b=True, level=3)), l2)
     check("L2, B not held", speed(setup(rom, l1=1, l2=1)), 0x60)
     check("L2, other item on B", speed(setup(rom, l1=1, l2=1, slot=1, b=True)), 0x60)
     check("L2, B held, stairs", speed(setup(rom, l1=1, l2=1, b=True, stairs=True)), 0x30)
-    check("L2, B held, dungeon stairs tile ignored", speed(setup(rom, l1=1, l2=1, b=True, stairs=True, level=2)), 0xC0)
+    check("L2, B held, dungeon stairs tile ignored", speed(setup(rom, l1=1, l2=1, b=True, stairs=True, level=2)), l2)
 
     cpu = setup(rom, l1=1, b=True)
     speeds = [speed(cpu) for _ in range(40)]
     check("L1 charge: speed 0 for 32 frames", speeds[:32], [0] * 32)
-    check("L1 charged: speed $80 after", speeds[32:], [0x80] * 8)
+    check("L1 charged: L1 speed after", speeds[32:], [l1] * 8)
     check("L1 charge counter caps at 32", cpu.ram[CHARGE], 0x20)
     check("L1 charge sound: 4 whooshes of effect $02", cpu.effects, [2, 2, 2, 2])
     cpu.ram[BUTTONS_DOWN] = 0
