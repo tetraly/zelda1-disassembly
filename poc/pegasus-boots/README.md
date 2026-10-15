@@ -53,7 +53,8 @@ supported.
 | `0x07181` | 1 | Bank 1 `Anim_ItemFrameTiles[$25]`: the boomerang spark's `$3C` becomes the boots tile `$1C` |
 | `0x071CE` | 1 | Bank 1 `Anim_WriteSpecificItemSprites`: narrow (half-width) tiles start at `$1C` instead of `$20`. No item drew `$1C`-`$1F` before |
 | `0x1F4F5` | 9 | Bank 7 `BoomerangFrameCycle`: the flying boomerang's frames wrap from `$25` back to its vanilla entries `$22`-`$24`, and its spark uses entry 9 (also `$3C`) |
-| `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (placeholder art). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
+| `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (after the team's bead design: body color 3, cuff 2, laces 1). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
+| `0x06B8A` | 1 | Bank 1 `ItemSlotToPaletteOffsetsOrValues[$1E]`: the L2 boots icon uses the red palette (was blue) |
 | shop | 4 | Two wares and two prices of the blue candle shop (found at patch time) |
 
 RAM: the L1 charge counter is `$038F` (`ObjMovingLimit+15`, which only the
@@ -71,8 +72,9 @@ player's boomerang used).
   `python3 test_boots_logic.py boots_poc.nes`.
 - `dump_sprite_tiles.py`: lists the blank tiles among the always-loaded
   sprites and draws all of them to a PNG.
-- `boot_preview.png`: the placeholder boot tile. The palettes are assumed:
-  Link's palette for L1, the blue palette for L2.
+- `boot_preview.png`: the boot icon. Left: L1 in Link's palette (brown boot, tan
+  cuff, laces in the tunic color). Right: L2 in the red palette (white boot,
+  orange cuff, red laces). The palette colors are assumed, not read from the ROM.
 
 ## Not yet verified
 
