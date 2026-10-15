@@ -39,6 +39,8 @@ class CPU:
             return self.ram[addr & 0x7FF]
         if 0x8000 <= addr < 0xC000:
             return self.rom[BANK5 + addr - 0x8000]
+        if addr >= 0xC000:
+            return self.rom[HEADER + 7 * 0x4000 + addr - 0xC000]
         raise ValueError(f"read {addr:#x}")
 
     def wr(self, addr, v):
@@ -70,6 +72,9 @@ class CPU:
             elif op == 0x85: self.wr(b1, a); pc += 2
             elif op == 0x8D: self.wr(w, a); pc += 3
             elif op == 0x8C: self.wr(w, y); pc += 3
+            elif op == 0x84: self.wr(b1, y); pc += 2
+            elif op == 0x2C:
+                m = self.rd(w); z = (a & m) == 0; n = bool(m & 0x80); v = bool(m & 0x40); pc += 3
             elif op == 0xEE: self.wr(w, nz((self.rd(w) + 1) & 0xFF)); pc += 3
             elif op == 0x29: a = nz(a & b1); pc += 2
             elif op in (0xC9, 0xC0, 0xCD):
@@ -125,12 +130,15 @@ def main():
         print(f"{'PASS' if ok else 'FAIL'}  {name}: {got!r}" + ("" if ok else f" (want {want!r})"))
 
     check("no boots, B held", speed(setup(rom, slot=2, b=True)), 0x60)
+    check("no B items at all (slot 0 selected), B held", speed(setup(rom, slot=0, b=True)), 0x60)
+    check("L1, B held, stairs", speed(setup(rom, l1=1, b=True, stairs=True)), 0x30)
     check("L2, B held", speed(setup(rom, l1=1, l2=1, b=True)), 0xC0)
     check("L2 only, B held", speed(setup(rom, l2=1, b=True)), 0xC0)
     check("L2, B held, dungeon", speed(setup(rom, l1=1, l2=1, b=True, level=3)), 0xC0)
     check("L2, B not held", speed(setup(rom, l1=1, l2=1)), 0x60)
     check("L2, other item on B", speed(setup(rom, l1=1, l2=1, slot=1, b=True)), 0x60)
     check("L2, B held, stairs", speed(setup(rom, l1=1, l2=1, b=True, stairs=True)), 0x30)
+    check("L2, B held, dungeon stairs tile ignored", speed(setup(rom, l1=1, l2=1, b=True, stairs=True, level=2)), 0xC0)
 
     cpu = setup(rom, l1=1, b=True)
     speeds = [speed(cpu) for _ in range(40)]

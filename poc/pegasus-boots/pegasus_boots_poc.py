@@ -34,10 +34,10 @@ PRG0_DATA_SHA1 = "a12d74c73a0481599a5d832361d168f4737bbcf6"
 CODE_SITES = (
     (0x14E48,
      "ad74060d7506f031a20fb5acf0030a9028a91095acac7506b91a8e9d8003201b71a9c09dbc03a9039dd003a9018dd003adf803d002a5989598",
-     "a9008d8f0360a400c060d027ad5606d02224fa501ea0c0ad7506d017a080ad8f03c920b00eee8f032907d005a90220806da0008cbc0360eaea",
+     "a9008d8f0360a060ad5606d02824fa5024ad7506d01dad7406f01aa080ad8f03c920b011ee8f032907d005a90220806da0002ca0c0840060ea",
      "WieldBoomerang body -> BootsPressB + BootsSpeed (bank 5 $8E38-$8E70)"),
-    (0x17397, "a5008dbc03", "4c3e8eeaea",
-     "InitLinkSpeed @SetSpeed -> JMP BootsSpeed (bank 5 $B387-$B38B)"),
+    (0x17376, "a9608500", "203e8eea",
+     "InitLinkSpeed: LDA #$60 / STA $00 -> JSR BootsSpeed / NOP (bank 5 $B366-$B369)"),
     (0x07154, "2222", "2525",
      "Anim_ItemFrameOffsets[$1D/$1E]: boots icon at Anim_ItemFrameTiles[$25] (bank 1)"),
     (0x07181, "3c", "1c",
@@ -84,9 +84,9 @@ L1_BOOTS = 0x1D        # wooden boomerang's item id
 L2_BOOTS = 0x1E        # magical boomerang's item id
 TEST_PRICE = 1
 
-# BootsSpeed's two LDY # operands (bank 5 $8E4E and $8E55), QSpeed per frame / 4.
-L2_SPEED_OFFSET = 0x14E5E
-L1_SPEED_OFFSET = 0x14E65
+# BootsSpeed's two LDY # operands (bank 5 $8E54 and $8E6C), QSpeed per frame / 4.
+L1_SPEED_OFFSET = 0x14E64
+L2_SPEED_OFFSET = 0x14E7C
 # Effective speed is quantized by Link's 8-pixel movement grid (vanilla $60 = 1.33 px/frame).
 SPEED_NOTES = {0x80: "2.0 px/frame, 1.5x, smooth", 0xC0: "2.67 px/frame, 2x, smooth",
                0xF4: "3.25 px/frame, ~2.44x, uneven (1-4 px steps)",

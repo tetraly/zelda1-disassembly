@@ -46,6 +46,9 @@ supported.
   4 frames per tile).
 - **Releasing B** goes back to walking speed. A new B press clears L1's charge.
 - **Stairs** keep the vanilla slow speed.
+- **No boots, no effect:** with no B items at all the game leaves the B
+  selection on the boots slot; the boots check ownership, so Link walks
+  normally then.
 - **Icon:** the boots have their own icon in the blank sprite tiles `$1C`/`$1D`.
   The boomerang graphics are untouched.
 - **Goriyas** throw boomerangs with the full vanilla spin and spark.
@@ -65,14 +68,14 @@ supported.
 | File offset | Bytes | What |
 | --- | --- | --- |
 | `0x14E48` | 57 | Bank 5 `$8E38`: `WieldBoomerang`'s body becomes `BootsPressB` and `BootsSpeed` |
-| `0x17397` | 5 | Bank 5 `$B387`: `InitLinkSpeed`'s `@SetSpeed` becomes `JMP BootsSpeed` |
+| `0x17376` | 4 | Bank 5 `$B366`: `InitLinkSpeed`'s `LDA #$60 / STA $00` becomes `JSR BootsSpeed / NOP` (the bytes ZORA reserves for co-op) |
 | `0x07154` | 2 | Bank 1 `Anim_ItemFrameOffsets` for item slots `$1D`/`$1E`: `$22` becomes `$25`, the boots icon entry |
 | `0x07181` | 1 | Bank 1 `Anim_ItemFrameTiles[$25]`: the boomerang spark's `$3C` becomes the boots tile `$1C` |
 | `0x071CE` | 1 | Bank 1 `Anim_WriteSpecificItemSprites`: narrow (half-width) tiles start at `$1C` instead of `$20`. No item drew `$1C`-`$1F` before |
 | `0x1F4F5` | 9 | Bank 7 `BoomerangFrameCycle`: the flying boomerang's frames wrap from `$25` back to its vanilla entries `$22`-`$24`, and its spark uses entry 9 (also `$3C`) |
 | `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (after the team's bead design: body color 3, cuff 2, laces 1). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
 | `0x06B8A` | 1 | Bank 1 `ItemSlotToPaletteOffsetsOrValues[$1E]`: the L2 boots icon uses the red palette (was blue) |
-| `0x14E65`, `0x14E5E` | 1 each | L1 and L2 speed operands inside `BootsSpeed` (`--l1-speed`, `--l2-speed`) |
+| `0x14E64`, `0x14E7C` | 1 each | L1 and L2 speed operands inside `BootsSpeed` (`--l1-speed`, `--l2-speed`) |
 | attract text | 26 | `MAGICAL BOOMERANG` and `BOOMERANG` become `MAGICAL BOOTS` and `BOOTS`, centered in the same length (found in DemoTextFields at patch time) |
 | shop | 4 | Two wares and two prices of the blue candle shop (found at patch time) |
 
