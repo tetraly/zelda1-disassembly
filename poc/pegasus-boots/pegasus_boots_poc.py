@@ -7,8 +7,8 @@ Replaces the wooden and magical boomerangs with L1 and L2 Pegasus Boots:
     then runs at QSpeed $80 (2.0 px/frame, 1.5x vanilla).
   - L2 (old magical boomerang): runs at once at QSpeed $C0 (2.67 px/frame, 2x).
   - Releasing B returns to vanilla speed. Stairs keep their vanilla slow speed.
-  - Sprite tile $36 (the boomerang item icon) is redrawn as a boot; Goriyas'
-    thrown boomerangs no longer use that frame.
+  - The boots get their own icon in the blank sprite tiles $1C/$1D. Goriyas
+    keep the full vanilla boomerang spin and spark.
   - Test shop: the overworld shop that sells the blue candle also sells L1 and
     L2 boots for 1 rupee each.
 
@@ -38,15 +38,20 @@ CODE_SITES = (
      "WieldBoomerang body -> BootsPressB + BootsSpeed (bank 5 $8E38-$8E70)"),
     (0x17397, "a5008dbc03", "4c3e8eeaea",
      "InitLinkSpeed @SetSpeed -> JMP BootsSpeed (bank 5 $B387-$B38B)"),
-    (0x1F4F5, "0001020100010201", "0101020101010201",
-     "BoomerangFrameCycle: Goriya spin never uses frame 0 (bank 7 $F4E5)"),
-    (0x1F4FE, "0000004040c08080", "8000004040c08080",
-     "BoomerangBaseSpriteAttrCycle (bank 7 $F4EE)"),
+    (0x07154, "2222", "2525",
+     "Anim_ItemFrameOffsets[$1D/$1E]: boots icon at Anim_ItemFrameTiles[$25] (bank 1)"),
+    (0x07181, "3c", "1c",
+     "Anim_ItemFrameTiles[$25]: the boomerang's spark tile $3C -> boots tile $1C (bank 1)"),
+    (0x071CE, "20", "1c",
+     "Anim_WriteSpecificItemSprites: narrow tiles start at $1C instead of $20 (bank 1)"),
+    (0x1F4F5, "000102010001020103", "fdfefffefdfefffee4",
+     "BoomerangFrameCycle: Goriya frames wrap back to the vanilla tiles; spark uses entry 9 ($3C) (bank 7 $F4E5)"),
 )
 
-# Sprite tiles $36 (top) and $37 (bottom) of CommonSpritePatterns (bank 2 $807F + $360).
+# Sprite tiles $1C (top) and $1D (bottom) of CommonSpritePatterns (bank 2 $807F + $1C0):
+# blank and unused in PRG0 ($1E/$1F after them are the inventory cursor).
 # 0 = transparent, 2 = sprite color 2, 3 = sprite color 3. Placeholder art.
-BOOT_TILE_OFFSET = HEADER_SIZE + 32895 + 0x36 * 16
+BOOT_TILE_OFFSET = HEADER_SIZE + 32895 + 0x1C * 16
 BOOT_ART = """
 ........
 ........
@@ -97,8 +102,10 @@ def patch(rom: bytearray) -> list[str]:
         log.append(f"{offset:#07x} {len(new):2} bytes  {what}")
 
     tile = tile_bytes(BOOT_ART)
+    if any(rom[BOOT_TILE_OFFSET:BOOT_TILE_OFFSET + len(tile)]):
+        raise SystemExit("Sprite tiles $1C/$1D are not blank in this ROM; the boots icon needs them.")
     rom[BOOT_TILE_OFFSET:BOOT_TILE_OFFSET + len(tile)] = tile
-    log.append(f"{BOOT_TILE_OFFSET:#07x} {len(tile):2} bytes  sprite tiles $36/$37 -> boot")
+    log.append(f"{BOOT_TILE_OFFSET:#07x} {len(tile):2} bytes  sprite tiles $1C/$1D (blank) -> boot icon")
 
     shops = [i for i in range(CAVE_COUNT)
              if any(rom[CAVE_WARES_OFFSET + 3 * i + j] & ITEM_MASK == BLUE_CANDLE for j in range(3))]

@@ -1,5 +1,47 @@
+--- a/src/Z_01.asm	2026-10-15 13:18:56.683182249 +0000
++++ b/src/Z_01.asm	2026-10-15 18:30:56.307139171 +0000
+@@ -1,9 +1,9 @@
+ .INCLUDE "Variables.inc"
+ .INCLUDE "CommonVars.inc"
+ .INCLUDE "CaveVars.inc"
+-
+-.IMPORT __BANK_01_CODE_LOAD__
+-.IMPORT __BANK_01_CODE_RUN__
++
++.IMPORT __BANK_01_CODE_LOAD__
++.IMPORT __BANK_01_CODE_RUN__
+ .IMPORT __BANK_01_CODE_RUN_END__
+ 
+ .SEGMENT "BANK_01_00"
+@@ -5245,7 +5245,7 @@
+     .BYTE $00, $03, $07, $0A, $0B, $0C, $0D, $0E
+     .BYTE $0F, $11, $12, $13, $14, $15, $16, $17
+     .BYTE $18, $17, $18, $17, $19, $1B, $1C, $1D
+-    .BYTE $1E, $1F, $20, $21, $1C, $22, $22, $26
++    .BYTE $1E, $1F, $20, $21, $1C, $25, $25, $26    ; PEGASUS BOOTS POC: slots $1D/$1E -> boots icon
+     .BYTE $27, $28, $29, $2B, $2E
+ 
+ Anim_ItemFrameTiles:
+@@ -5253,7 +5253,7 @@
+     .BYTE $86, $3C, $2A, $26, $24, $22, $40, $4A
+     .BYTE $8A, $6C, $42, $46, $76, $2C, $4E, $4C
+     .BYTE $6A, $50, $52, $66, $32, $2E, $68, $F3
+-    .BYTE $6E, $F2, $36, $38, $3A, $3C, $56, $48
++    .BYTE $6E, $F2, $36, $38, $3A, $1C, $56, $48    ; PEGASUS BOOTS POC: entry $25 = boots tile $1C
+     .BYTE $78, $20, $82, $7A, $7C, $30, $64, $62
+ 
+ ; Params:
+@@ -5331,7 +5331,7 @@
+     LDA $02
+     CMP #$F3
+     BEQ @Narrow
+-    CMP #$20
++    CMP #$1C                    ; PEGASUS BOOTS POC: was $20, so the boots tile $1C is narrow.
+     BCC @Wide
+     CMP #$62
+     BCS @Wide
 --- a/src/Z_05.asm	2026-10-15 13:18:56.698392686 +0000
-+++ b/src/Z_05.asm	2026-10-15 17:00:53.415629930 +0000
++++ b/src/Z_05.asm	2026-10-15 18:30:56.305216092 +0000
 @@ -2899,55 +2899,42 @@
      .ADDR WieldRod
  
@@ -102,18 +144,18 @@
      RTS
  
 --- a/src/Z_07.asm	2026-10-15 13:18:56.702392686 +0000
-+++ b/src/Z_07.asm	2026-10-15 17:00:53.419817824 +0000
-@@ -3821,11 +3821,11 @@
++++ b/src/Z_07.asm	2026-10-15 18:30:56.306104575 +0000
+@@ -3821,8 +3821,11 @@
      JMP ResetObjState
  
  BoomerangFrameCycle:
 -    .BYTE $00, $01, $02, $01, $00, $01, $02, $01
-+    .BYTE $01, $01, $02, $01, $01, $01, $02, $01    ; PEGASUS BOOTS POC: never frame 0 (tile $36 = boots)
-     .BYTE $03
+-    .BYTE $03
++    ; PEGASUS BOOTS POC: the boomerang item slots now start at Anim_ItemFrameTiles[$25]
++    ; (the boots icon), so these frames wrap back to the vanilla entries $22-$24, and the
++    ; spark uses entry 9 (also tile $3C) because entry $25 now holds the boots.
++    .BYTE $FD, $FE, $FF, $FE, $FD, $FE, $FF, $FE
++    .BYTE $E4
  
  BoomerangBaseSpriteAttrCycle:
--    .BYTE $00, $00, $00, $40, $40, $C0, $80, $80
-+    .BYTE $80, $00, $00, $40, $40, $C0, $80, $80
-     .BYTE $01
- 
- BoomerangQSpeedFracsY:
+     .BYTE $00, $00, $00, $40, $40, $C0, $80, $80
