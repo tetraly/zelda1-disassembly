@@ -10,6 +10,22 @@ bytes are rewritten in place and none are added.
 python3 pegasus_boots_poc.py "Legend of Zelda, The (USA).nes" boots_poc.nes
 ```
 
+Options: `--l1-speed HEX` and `--l2-speed HEX` set the boots' QSpeed (defaults
+`80` and `C0`). For example, `--l1-speed C0 --l2-speed F4` gives L1 2× and L2 about
+2.44×.
+
+| QSpeed | Effective speed | vs vanilla | Motion |
+| --- | --- | --- | --- |
+| `60` (vanilla) | 1.33 px/frame | 1× | |
+| `80` | 2.0 px/frame | 1.5× | smooth (2 px every frame) |
+| `C0` | 2.67 px/frame | 2× | smooth (3, 3, 2 px) |
+| `F4` | 3.25 px/frame | ~2.44× | uneven: steps of 1 to 4 px per frame |
+| `F8` | 3.5 px/frame | ~2.63× | uneven |
+
+Link moves on an 8-pixel grid and stops at each grid point, so speeds above 2×
+mix 4-pixel and 1-pixel frames. A smooth 2.5× or 3× would need changes to the
+shared movement routine in the full fixed bank.
+
 The script checks that the input is the PRG0 ROM (No-Intro SHA-1
 `a12d74c7…` of the data after the header) and that every code site still has
 its vanilla bytes. It writes `boots_poc.nes` and `boots_poc.ips`. The IPS
@@ -33,9 +49,10 @@ supported.
 - **Icon:** the boots have their own icon in the blank sprite tiles `$1C`/`$1D`.
   The boomerang graphics are untouched.
 - **Goriyas** throw boomerangs with the full vanilla spin and spark.
+- **Attract mode:** the title screen's item list says BOOTS and MAGICAL BOOTS
+  where it said BOOMERANG and MAGICAL BOOMERANG.
 
 **Known quirks (accepted for the POC):**
-- The attract-mode item list shows the boots where the boomerangs were.
 - L1 keeps its charge while B stays held, even through a sword swing or a
   screen scroll.
 - Re-pressing B during a sword swing doesn't clear the charge.
@@ -55,6 +72,8 @@ supported.
 | `0x1F4F5` | 9 | Bank 7 `BoomerangFrameCycle`: the flying boomerang's frames wrap from `$25` back to its vanilla entries `$22`-`$24`, and its spark uses entry 9 (also `$3C`) |
 | `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (after the team's bead design: body color 3, cuff 2, laces 1). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
 | `0x06B8A` | 1 | Bank 1 `ItemSlotToPaletteOffsetsOrValues[$1E]`: the L2 boots icon uses the red palette (was blue) |
+| `0x14E65`, `0x14E5E` | 1 each | L1 and L2 speed operands inside `BootsSpeed` (`--l1-speed`, `--l2-speed`) |
+| attract text | 26 | `MAGICAL BOOMERANG` and `BOOMERANG` become `MAGICAL BOOTS` and `BOOTS`, centered in the same length (found in DemoTextFields at patch time) |
 | shop | 4 | Two wares and two prices of the blue candle shop (found at patch time) |
 
 RAM: the L1 charge counter is `$038F` (`ObjMovingLimit+15`, which only the

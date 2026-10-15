@@ -84,6 +84,19 @@ L1_BOOTS = 0x1D        # wooden boomerang's item id
 L2_BOOTS = 0x1E        # magical boomerang's item id
 TEST_PRICE = 1
 
+# BootsSpeed's two LDY # operands (bank 5 $8E4E and $8E55), QSpeed per frame / 4.
+L2_SPEED_OFFSET = 0x14E5E
+L1_SPEED_OFFSET = 0x14E65
+# Effective speed is quantized by Link's 8-pixel movement grid (vanilla $60 = 1.33 px/frame).
+SPEED_NOTES = {0x80: "2.0 px/frame, 1.5x, smooth", 0xC0: "2.67 px/frame, 2x, smooth",
+               0xF4: "3.25 px/frame, ~2.44x, uneven (1-4 px steps)",
+               0xF8: "3.5 px/frame, ~2.63x, uneven (1-4 px steps)"}
+
+# The attract mode's item list (bins.xml DemoTextFields): fields of an offset byte, tiles, $FF.
+DEMO_TEXT_OFFSET = HEADER_SIZE + 37530
+DEMO_TEXT_SIZE = 531
+RENAMES = (("MAGICAL BOOMERANG", "MAGICAL BOOTS"), ("BOOMERANG", "BOOTS"))
+
 
 def tile_bytes(art: list[str]) -> bytes:
     assert len(art) == 16 and all(len(row) == 8 for row in art)
@@ -95,7 +108,31 @@ def tile_bytes(art: list[str]) -> bytes:
     return bytes(out)
 
 
-def patch(rom: bytearray) -> list[str]:
+def encode(text: str) -> bytes:
+    """Zelda 1 tile codes: 0-9 = $00-$09, A-Z = $0A-$23, space = $24."""
+    return bytes(ord(c) - 48 if c.isdigit() else 0x24 if c == " " else ord(c) - 55 for c in text)
+
+
+def rename_demo_text(rom: bytearray) -> list[str]:
+    """Same-length, centered replacements in the attract mode's item list."""
+    log = []
+    block = slice(DEMO_TEXT_OFFSET, DEMO_TEXT_OFFSET + DEMO_TEXT_SIZE)
+    for old, new in RENAMES:
+        pad = len(old) - len(new)
+        old_b, new_b = encode(old), encode(" " * (pad // 2) + new + " " * (pad - pad // 2))
+        text = bytearray(rom[block])
+        at = text.find(old_b)
+        while at >= 0:
+            rom[DEMO_TEXT_OFFSET + at:DEMO_TEXT_OFFSET + at + len(new_b)] = new_b
+            log.append(f"{DEMO_TEXT_OFFSET + at:#07x} {len(new_b):2} bytes  attract-mode text {old!r} -> {new!r}")
+            text[at:at + len(new_b)] = new_b
+            at = text.find(old_b)
+    if not log:
+        log.append("warning: no BOOMERANG text found in the attract mode's item list")
+    return log
+
+
+def patch(rom: bytearray, l1_speed: int = 0x80, l2_speed: int = 0xC0) -> list[str]:
     log = []
     for offset, old, new, what in CODE_SITES:
         old, new = bytes.fromhex(old), bytes.fromhex(new)
@@ -103,6 +140,12 @@ def patch(rom: bytearray) -> list[str]:
             raise SystemExit(f"Unexpected bytes at {offset:#x} ({what}); is this an unmodified PRG0 ROM?")
         rom[offset:offset + len(new)] = new
         log.append(f"{offset:#07x} {len(new):2} bytes  {what}")
+
+    for offset, speed, name in ((L1_SPEED_OFFSET, l1_speed, "L1"), (L2_SPEED_OFFSET, l2_speed, "L2")):
+        rom[offset] = speed
+        log.append(f"{offset:#07x}  1 byte   {name} boots speed ${speed:02X} ({SPEED_NOTES.get(speed, 'see README')})")
+
+    log += rename_demo_text(rom)
 
     tile = tile_bytes(BOOT_ART)
     if any(rom[BOOT_TILE_OFFSET:BOOT_TILE_OFFSET + len(tile)]):
@@ -148,7 +191,15 @@ def main() -> None:
     parser.add_argument("rom", type=Path, help="Legend of Zelda, The (USA).nes (PRG0)")
     parser.add_argument("out", type=Path, help="patched ROM to write")
     parser.add_argument("--force", action="store_true", help="skip the PRG0 hash check")
+    speed = lambda text: int(text, 16)
+    parser.add_argument("--l1-speed", type=speed, default=0x80, metavar="HEX",
+                        help="L1 QSpeed, $60-$FF (default 80 = 1.5x; C0 = 2x)")
+    parser.add_argument("--l2-speed", type=speed, default=0xC0, metavar="HEX",
+                        help="L2 QSpeed, $60-$FF (default C0 = 2x; F4 = ~2.44x, uneven)")
     args = parser.parse_args()
+    for value in (args.l1_speed, args.l2_speed):
+        if not 0x60 <= value <= 0xFF:
+            sys.exit("Speeds must be between 60 (vanilla) and FF.")
 
     data = args.rom.read_bytes()
     if len(data) != ROM_SIZE or data[:4] != b"NES\x1a":
@@ -158,7 +209,7 @@ def main() -> None:
         sys.exit(f"Not the PRG0 ROM (SHA-1 {digest}). PRG1 is not supported by this POC.")
 
     rom = bytearray(data)
-    for line in patch(rom):
+    for line in patch(rom, args.l1_speed, args.l2_speed):
         print(line)
     args.out.write_bytes(rom)
     ips_path = args.out.with_suffix(".ips")
