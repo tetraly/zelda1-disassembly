@@ -11,7 +11,7 @@ python3 pegasus_boots_poc.py "Legend of Zelda, The (USA).nes" boots_poc.nes
 ```
 
 Options: `--l1-speed HEX` and `--l2-speed HEX` set the boots' QSpeed (defaults
-`80` and `C0`). For example, `--l1-speed C0 --l2-speed F4` gives L1 2× and L2 about
+`79` and `A5`, the beta tester's pick). For example, `--l1-speed C0 --l2-speed F4` gives L1 2× and L2 about
 2.44×.
 
 | QSpeed | Effective speed | vs vanilla | Motion |
@@ -41,11 +41,11 @@ supported.
   rupees, so pick one up first.
 - **Selecting the boots:** open the menu with Start and put the boots on B.
   They show where the boomerang used to be.
-- **L2:** hold B and a direction. Link runs at once at about 2× walking
-  speed (QSpeed `$C0`, 3 frames per 8-pixel tile).
+- **L2:** hold B and a direction. Link runs at once at about 1.73× walking
+  speed (QSpeed `$A5` by default).
 - **L1 (without L2):** hold B and a direction. Link runs in place for 32
-  frames, with a whoosh every 8 frames, then runs at 1.5× (QSpeed `$80`,
-  4 frames per tile).
+  frames, with a whoosh every 8 frames, then runs at about 1.34× (QSpeed
+  `$79` by default).
 - **Releasing B** goes back to walking speed. A new B press clears L1's charge.
 - **Stairs** keep the vanilla slow speed.
 - **No boots, no effect:** with no B items at all the game leaves the B

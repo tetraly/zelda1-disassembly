@@ -4,8 +4,8 @@
 Replaces the wooden and magical boomerangs with L1 and L2 Pegasus Boots:
   - Boots act only while selected on B and B is held, with a direction pressed.
   - L1 (old wooden boomerang): runs in place for 32 frames, whooshing every 8,
-    then runs at QSpeed $80 (2.0 px/frame, 1.5x vanilla).
-  - L2 (old magical boomerang): runs at once at QSpeed $C0 (2.67 px/frame, 2x).
+    then runs at QSpeed $79 (1.78 px/frame, ~1.34x vanilla).
+  - L2 (old magical boomerang): runs at once at QSpeed $A5 (2.31 px/frame, ~1.73x).
   - Releasing B returns to vanilla speed. Stairs keep their vanilla slow speed.
   - The boots get their own icon in the blank sprite tiles $1C/$1D. Goriyas
     keep the full vanilla boomerang spin and spark.
@@ -132,7 +132,7 @@ def rename_demo_text(rom: bytearray) -> list[str]:
     return log
 
 
-def patch(rom: bytearray, l1_speed: int = 0x80, l2_speed: int = 0xC0) -> list[str]:
+def patch(rom: bytearray, l1_speed: int = 0x79, l2_speed: int = 0xA5) -> list[str]:
     log = []
     for offset, old, new, what in CODE_SITES:
         old, new = bytes.fromhex(old), bytes.fromhex(new)
@@ -192,10 +192,10 @@ def main() -> None:
     parser.add_argument("out", type=Path, help="patched ROM to write")
     parser.add_argument("--force", action="store_true", help="skip the PRG0 hash check")
     speed = lambda text: int(text, 16)
-    parser.add_argument("--l1-speed", type=speed, default=0x80, metavar="HEX",
-                        help="L1 QSpeed, $60-$FF (default 80 = 1.5x; C0 = 2x)")
-    parser.add_argument("--l2-speed", type=speed, default=0xC0, metavar="HEX",
-                        help="L2 QSpeed, $60-$FF (default C0 = 2x; F4 = ~2.44x, uneven)")
+    parser.add_argument("--l1-speed", type=speed, default=0x79, metavar="HEX",
+                        help="L1 QSpeed, $60-$FF (default 79 = ~1.34x; 80 = 1.5x, smooth)")
+    parser.add_argument("--l2-speed", type=speed, default=0xA5, metavar="HEX",
+                        help="L2 QSpeed, $60-$FF (default A5 = ~1.73x; C0 = 2x, smooth)")
     args = parser.parse_args()
     for value in (args.l1_speed, args.l2_speed):
         if not 0x60 <= value <= 0xFF:
