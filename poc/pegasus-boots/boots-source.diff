@@ -1,0 +1,119 @@
+--- a/src/Z_05.asm	2026-10-15 13:18:56.698392686 +0000
++++ b/src/Z_05.asm	2026-10-15 17:00:53.415629930 +0000
+@@ -2899,55 +2899,42 @@
+     .ADDR WieldRod
+ 
+ WieldBoomerang:
+-    ; If missing wooden boomerang and magic boomerang, return.
+-    LDA InvBoomerang
+-    ORA InvMagicBoomerang
+-    BEQ L14E71_Exit
+-
+-    ; Switch to the boomerang slot.
+-    LDX #$0F
+-
+-    ; If state in object slot <> 0 and high bit is clear, return.
+-    LDA ObjState, X
+-    BEQ :+
+-    ASL
+-    BCC L14E71_Exit
+-:
+-    ; Set state to $10 for boomerang.
+-    LDA #$10
+-    STA ObjState, X
+-
+-    ; Set the farthest distance the boomerang can fly based on
+-    ; the type of boomerang.
+-    LDY InvMagicBoomerang
+-    LDA BoomerangLimits, Y
+-    STA ObjMovingLimit, X
+-
+-    ; Set up the boomerang.
+-    ; QSpeed = $C0 (3 pixels a frame)
+-    ;
+-    ; The first turning animation frame lasts 3 screen frames, instead of 2.
+-    ; Maybe it's to make up for the fact that the first screen frame isn't seen.
+-    JSR PlaceWeaponForPlayerState
+-    LDA #$C0
+-    STA ObjQSpeedFrac, X
+-    LDA #$03
+-    STA ObjAnimCounter, X
+-
+-    ; See PlaceWeaponForPlayerStateAndAnim for the reason
+-    ; that Link's animation counter is set to 1.
+-    LDA #$01
+-    STA ObjAnimCounter
++    ; PEGASUS BOOTS POC: WieldItem slot 0 lands here on each new B press.
++    ; Clear the L1 boots' charge counter (old boomerang ObjMovingLimit[$0F]).
++BootsPressB:
++    LDA #$00
++    STA ObjMovingLimit+15
++    RTS
+ 
+-    ; If there's an input direction, then use it as the weapon's direction.
+-    ; It might be diagonal, with horizontal and vertical components.
+-    ; Else use Link's facing direction.
+-    LDA ObjInputDir
++; Called (by JMP) from InitLinkSpeed's @SetSpeed with the vanilla speed in [00]
++; ($60, or $30 on stairs). Stores the final speed in ObjQSpeedFrac.
++BootsSpeed:
++    LDY $00
++    CPY #$60
++    BNE @Set                    ; Stairs: keep vanilla speed.
++    LDA SelectedItemSlot
++    BNE @Set                    ; Boots aren't on B.
++    BIT ButtonsDown
++    BVC @Set                    ; B (bit 6) isn't held.
++    LDY #$C0                    ; L2 boots speed (2.67 px/frame effective).
++    LDA InvMagicBoomerang
++    BNE @Set
++    LDY #$80                    ; L1 boots speed (2.0 px/frame effective).
++    LDA ObjMovingLimit+15
++    CMP #$20                    ; Charged after 32 frames.
++    BCS @Set
++    INC ObjMovingLimit+15
++    AND #$07
+     BNE :+
+-    LDA ObjDir
++    LDA #$02                    ; Boomerang/arrow effect every 8 frames of charging.
++    JSR PlayEffect
+ :
+-    STA ObjDir, X
+-
++    LDY #$00                    ; Charging: run in place.
++@Set:
++    STY ObjQSpeedFrac
++    RTS
++    NOP
++    NOP
+ L14E71_Exit:
+     RTS
+ 
+@@ -7142,8 +7129,9 @@
+     STA ObjPosFrac
+ 
+ @SetSpeed:
+-    LDA $00
+-    STA ObjQSpeedFrac
++    JMP BootsSpeed              ; PEGASUS BOOTS POC
++    NOP
++    NOP
+ :
+     RTS
+ 
+--- a/src/Z_07.asm	2026-10-15 13:18:56.702392686 +0000
++++ b/src/Z_07.asm	2026-10-15 17:00:53.419817824 +0000
+@@ -3821,11 +3821,11 @@
+     JMP ResetObjState
+ 
+ BoomerangFrameCycle:
+-    .BYTE $00, $01, $02, $01, $00, $01, $02, $01
++    .BYTE $01, $01, $02, $01, $01, $01, $02, $01    ; PEGASUS BOOTS POC: never frame 0 (tile $36 = boots)
+     .BYTE $03
+ 
+ BoomerangBaseSpriteAttrCycle:
+-    .BYTE $00, $00, $00, $40, $40, $C0, $80, $80
++    .BYTE $80, $00, $00, $40, $40, $C0, $80, $80
+     .BYTE $01
+ 
+ BoomerangQSpeedFracsY:
