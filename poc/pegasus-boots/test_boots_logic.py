@@ -26,6 +26,8 @@ SELECTED_SLOT = 0x656
 INV_BOOMERANG = 0x674
 INV_MAGIC_BOOMERANG = 0x675
 B = 0x40
+OBJ_INPUT_DIR = 0x3F8
+RIGHT = 0x01
 
 
 class CPU:
@@ -76,6 +78,7 @@ class CPU:
             elif op == 0x2C:
                 m = self.rd(w); z = (a & m) == 0; n = bool(m & 0x80); v = bool(m & 0x40); pc += 3
             elif op == 0xEE: self.wr(w, nz((self.rd(w) + 1) & 0xFF)); pc += 3
+            elif op == 0xCE: self.wr(w, nz((self.rd(w) - 1) & 0xFF)); pc += 3
             elif op == 0x29: a = nz(a & b1); pc += 2
             elif op in (0xC9, 0xC0, 0xCD):
                 reg = y if op == 0xC0 else a
@@ -122,7 +125,7 @@ def speed(cpu):
 def main():
     rom = open(sys.argv[1], "rb").read()
     fails = 0
-    l1, l2 = rom[0x14E64], rom[0x14E7C]       # the speeds chosen with --l1-speed / --l2-speed
+    l1, l2 = rom[0x14E7A], rom[0x14E7D]       # the speeds chosen with --l1-speed / --l2-speed
     print(f"L1 speed ${l1:02X}, L2 speed ${l2:02X}")
 
     def check(name, got, want):
@@ -142,19 +145,34 @@ def main():
     check("L2, B held, stairs", speed(setup(rom, l1=1, l2=1, b=True, stairs=True)), 0x30)
     check("L2, B held, dungeon stairs tile ignored", speed(setup(rom, l1=1, l2=1, b=True, stairs=True, level=2)), l2)
 
+    def frame(cpu):
+        """One frame of play: the game sets the input direction, then InitLinkSpeed runs."""
+        cpu.ram[OBJ_INPUT_DIR] = RIGHT
+        return speed(cpu), cpu.ram[OBJ_INPUT_DIR]
+
     cpu = setup(rom, l1=1, b=True)
-    speeds = [speed(cpu) for _ in range(40)]
-    check("L1 charge: speed 0 for 32 frames", speeds[:32], [0] * 32)
-    check("L1 charged: L1 speed after", speeds[32:], [l1] * 8)
-    check("L1 charge counter caps at 32", cpu.ram[CHARGE], 0x20)
-    check("L1 charge sound: 4 whooshes of effect $02", cpu.effects, [2, 2, 2, 2])
+    cpu.call(BOOTS_PRESS_B)                     # the B press that starts holding B
+    check("B press starts a 32-frame wind-up", cpu.ram[CHARGE], 0x20)
+    frames = [frame(cpu) for _ in range(40)]
+    check("L1 wind-up: vanilla speed, never 0 (room walks reuse it)", [s for s, _ in frames[:31]], [0x60] * 31)
+    check("L1 wind-up: input cleared, so Link stands still", [d for _, d in frames[:31]], [0] * 31)
+    check("L1 takeoff on frame 32: L1 speed, input kept", frames[31], (l1, RIGHT))
+    check("L1 wound up: L1 speed after", [s for s, _ in frames[32:]], [l1] * 8)
+    check("L1 whoosh once, at takeoff", cpu.effects, [2])
+    check("No state ever stores speed 0", min(s for s, _ in frames), 0x60 if l1 >= 0x60 else l1)
     cpu.ram[BUTTONS_DOWN] = 0
     check("L1 released: vanilla speed", speed(cpu), 0x60)
-    check("L1 release alone keeps the charge", cpu.ram[CHARGE], 0x20)
+    check("L1 release alone keeps the charge", cpu.ram[CHARGE], 0)
     cpu.call(BOOTS_PRESS_B)
-    check("New B press clears the charge", cpu.ram[CHARGE], 0)
     cpu.ram[BUTTONS_DOWN] = B
-    check("L1 after re-press: charging again", speed(cpu), 0)
+    check("New B press restarts the wind-up", frame(cpu), (0x60, 0))
+
+    # The freeze: entering a room calls InitLinkSpeed once to set the walk-in speed.
+    cpu = setup(rom, l1=1, b=True)
+    cpu.call(BOOTS_PRESS_B)
+    for _ in range(5):
+        frame(cpu)
+    check("Room entry mid-wind-up: walk-in speed is $60, not 0", speed(cpu), 0x60)
 
     sys.exit(1 if fails else 0)
 

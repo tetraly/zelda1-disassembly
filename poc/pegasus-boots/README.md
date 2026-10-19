@@ -43,9 +43,12 @@ supported.
   They show where the boomerang used to be.
 - **L2:** hold B and a direction. Link runs at once at about 1.73× walking
   speed (QSpeed `$A5` by default).
-- **L1 (without L2):** hold B and a direction. Link runs in place for 32
-  frames, with a whoosh every 8 frames, then runs at about 1.34× (QSpeed
-  `$79` by default).
+- **L1 (without L2):** hold B and a direction. Link stands still for a
+  32-frame wind-up, then whooshes and runs at about 1.34× (QSpeed `$79` by
+  default). During the wind-up his speed stays at the vanilla `$60` and his
+  input direction is cleared, so no door or screen transition can start with
+  a stored speed of 0 (the room-to-room walks reuse the stored speed; a 0
+  there froze the game).
 - **Releasing B** goes back to walking speed. A new B press clears L1's charge.
 - **Stairs** keep the vanilla slow speed.
 - **No boots, no effect:** with no B items at all the game leaves the B
@@ -76,7 +79,7 @@ supported.
 | `0x071CE` | 1 | Bank 1 `Anim_WriteSpecificItemSprites`: narrow (half-width) tiles start at `$1C` instead of `$20`. No item drew `$1C`-`$1F` before |
 | `0x1F4F5` | 9 | Bank 7 `BoomerangFrameCycle`: the flying boomerang's frames wrap from `$25` back to its vanilla entries `$22`-`$24`, and its spark uses entry 9 (also `$3C`) |
 | `0x0824F` | 32 | Sprite tiles `$1C`/`$1D`, blank in PRG0, become the boot (design A: outline color 3, fill color 2). `$1E`/`$1F` after them are the inventory cursor and stay as they are |
-| `0x14E64`, `0x14E7C` | 1 each | L1 and L2 speed operands inside `BootsSpeed` (`--l1-speed`, `--l2-speed`) |
+| `0x14E7A`, `0x14E7D` | 1 each | L1 and L2 speed operands inside `BootsSpeed` (`--l1-speed`, `--l2-speed`) |
 | attract text | 26 | `MAGICAL BOOMERANG` and `BOOMERANG` become `MAGICAL BOOTS` and `BOOTS`, centered in the same length (found in DemoTextFields at patch time) |
 | shop | 4 | Two wares and two prices of the blue candle shop (found at patch time) |
 

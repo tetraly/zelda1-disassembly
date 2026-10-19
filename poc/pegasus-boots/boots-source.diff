@@ -1,5 +1,5 @@
 --- a/src/Z_01.asm	2026-10-15 13:18:56.683182249 +0000
-+++ b/src/Z_01.asm	2026-10-15 21:29:42.917785024 +0000
++++ b/src/Z_01.asm	2026-10-19 20:41:46.918437703 +0000
 @@ -1,9 +1,9 @@
  .INCLUDE "Variables.inc"
  .INCLUDE "CommonVars.inc"
@@ -41,8 +41,8 @@
      CMP #$62
      BCS @Wide
 --- a/src/Z_05.asm	2026-10-15 13:18:56.698392686 +0000
-+++ b/src/Z_05.asm	2026-10-15 21:29:42.915647712 +0000
-@@ -2899,55 +2899,44 @@
++++ b/src/Z_05.asm	2026-10-19 20:41:46.915598539 +0000
+@@ -2899,55 +2899,48 @@
      .ADDR WieldRod
  
  WieldBoomerang:
@@ -80,25 +80,22 @@
 -    STA ObjQSpeedFrac, X
 -    LDA #$03
 -    STA ObjAnimCounter, X
--
++    ; PEGASUS BOOTS POC: WieldItem slot 0 lands here on each new B press.
++    ; Start the L1 boots' 32-frame wind-up (counter in old boomerang ObjMovingLimit[$0F]).
++BootsPressB:
++    LDA #$20
++    STA ObjMovingLimit+15
++    RTS
+ 
 -    ; See PlaceWeaponForPlayerStateAndAnim for the reason
 -    ; that Link's animation counter is set to 1.
 -    LDA #$01
 -    STA ObjAnimCounter
-+    ; PEGASUS BOOTS POC: WieldItem slot 0 lands here on each new B press.
-+    ; Clear the L1 boots' charge counter (old boomerang ObjMovingLimit[$0F]).
-+BootsPressB:
-+    LDA #$00
-+    STA ObjMovingLimit+15
-+    RTS
- 
--    ; If there's an input direction, then use it as the weapon's direction.
--    ; It might be diagonal, with horizontal and vertical components.
--    ; Else use Link's facing direction.
--    LDA ObjInputDir
-+; Called from the top of InitLinkSpeed. Returns Link's speed in [00]: vanilla $60, or the
-+; boots' speed while they are owned, selected on B, and B is held. InitLinkSpeed's stairs
-+; check runs afterwards and still slows Link to $30 on stairs.
++; Called from the top of InitLinkSpeed (every frame Link has a direction to move in, and once
++; when entering a room). Returns Link's speed in [00]: vanilla $60, or the boots' speed while
++; they are owned, selected on B, and B is held. During L1's wind-up Link keeps speed $60 and his
++; input direction is cleared, so he stands still and can't start a door or screen transition;
++; the room-to-room walks reuse the stored speed, so it must never be 0.
 +BootsSpeed:
 +    LDY #$60                    ; Vanilla speed.
 +    LDA SelectedItemSlot
@@ -109,31 +106,38 @@
 +    BNE @L2
 +    LDA InvBoomerang
 +    BEQ @Set                    ; Slot 0 is selected but no boots are owned (no B items at all).
-+    LDY #$80                    ; L1 boots speed (2.0 px/frame effective).
 +    LDA ObjMovingLimit+15
-+    CMP #$20                    ; Charged after 32 frames.
-+    BCS @Set
-+    INC ObjMovingLimit+15
-+    AND #$07
-     BNE :+
++    BEQ @L1                     ; Wound up: run.
++    DEC ObjMovingLimit+15
++    BEQ @Takeoff                ; Last wind-up frame: whoosh and run.
++    LDA #$00                    ; Winding up: stand still at the vanilla speed.
++    STA ObjInputDir
++    BEQ @Set
+ 
+-    ; If there's an input direction, then use it as the weapon's direction.
+-    ; It might be diagonal, with horizontal and vertical components.
+-    ; Else use Link's facing direction.
+-    LDA ObjInputDir
+-    BNE :+
 -    LDA ObjDir
-+    LDA #$02                    ; Boomerang/arrow effect every 8 frames of charging.
-+    JSR PlayEffect
- :
+-:
 -    STA ObjDir, X
--
-+    LDY #$00                    ; Charging: run in place.
++@Takeoff:
++    LDA #$02                    ; Boomerang/arrow whoosh.
++    JSR PlayEffect
+ 
++@L1:
++    LDY #$80                    ; L1 boots speed.
 +    .BYTE $2C                   ; BIT abs: skip the next instruction.
 +@L2:
-+    LDY #$C0                    ; L2 boots speed (2.67 px/frame effective).
++    LDY #$C0                    ; L2 boots speed.
 +@Set:
 +    STY $00
 +    RTS
-+    NOP
  L14E71_Exit:
      RTS
  
-@@ -7121,8 +7110,8 @@
+@@ -7121,8 +7114,8 @@
      LDX #$00
  
  InitLinkSpeed:
@@ -145,7 +149,7 @@
      BNE @SetSpeed               ; If in UW, go use this speed.
  
 --- a/src/Z_07.asm	2026-10-15 13:18:56.702392686 +0000
-+++ b/src/Z_07.asm	2026-10-15 21:29:42.916664467 +0000
++++ b/src/Z_07.asm	2026-10-19 20:41:46.916887430 +0000
 @@ -3821,8 +3821,11 @@
      JMP ResetObjState
  

@@ -3,7 +3,7 @@
 
 Replaces the wooden and magical boomerangs with L1 and L2 Pegasus Boots:
   - Boots act only while selected on B and B is held, with a direction pressed.
-  - L1 (old wooden boomerang): runs in place for 32 frames, whooshing every 8,
+  - L1 (old wooden boomerang): stands still for a 32-frame wind-up, whooshes,
     then runs at QSpeed $79 (1.78 px/frame, ~1.34x vanilla).
   - L2 (old magical boomerang): runs at once at QSpeed $A5 (2.31 px/frame, ~1.73x).
   - Releasing B returns to vanilla speed. Stairs keep their vanilla slow speed.
@@ -34,7 +34,7 @@ PRG0_DATA_SHA1 = "a12d74c73a0481599a5d832361d168f4737bbcf6"
 CODE_SITES = (
     (0x14E48,
      "ad74060d7506f031a20fb5acf0030a9028a91095acac7506b91a8e9d8003201b71a9c09dbc03a9039dd003a9018dd003adf803d002a5989598",
-     "a9008d8f0360a060ad5606d02824fa5024ad7506d01dad7406f01aa080ad8f03c920b011ee8f032907d005a90220806da0002ca0c0840060ea",
+     "a9208d8f0360a060ad5606d02924fa5025ad7506d01ead7406f01bad8f03f011ce8f03f007a9008df803f00aa90220806da0802ca0c0840060",
      "WieldBoomerang body -> BootsPressB + BootsSpeed (bank 5 $8E38-$8E70)"),
     (0x17376, "a9608500", "203e8eea",
      "InitLinkSpeed: LDA #$60 / STA $00 -> JSR BootsSpeed / NOP (bank 5 $B366-$B369)"),
@@ -82,9 +82,9 @@ L1_BOOTS = 0x1D        # wooden boomerang's item id
 L2_BOOTS = 0x1E        # magical boomerang's item id
 TEST_PRICE = 1
 
-# BootsSpeed's two LDY # operands (bank 5 $8E54 and $8E6C), QSpeed per frame / 4.
-L1_SPEED_OFFSET = 0x14E64
-L2_SPEED_OFFSET = 0x14E7C
+# BootsSpeed's two LDY # operands (bank 5 $8E6A and $8E6D), QSpeed per frame / 4.
+L1_SPEED_OFFSET = 0x14E7A
+L2_SPEED_OFFSET = 0x14E7D
 # Effective speed is quantized by Link's 8-pixel movement grid (vanilla $60 = 1.33 px/frame).
 SPEED_NOTES = {0x79: "1.78 px/frame, ~1.34x, nearly smooth (1-2 px steps)",
                0xA5: "2.31 px/frame, ~1.73x, nearly smooth (1-3 px steps)",
